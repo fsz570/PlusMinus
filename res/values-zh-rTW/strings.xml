@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">加加減減</string>
+    <string name="start_btn_label">開始遊戲</string>
+    <string name="setting_btn_label">設定</string>
+    <string name="settings_title">設定</string>
+    
+    <string name="times_title">時間</string>
+    <string name="times_label">遊戲時間</string>
+    
+    <string name="operators_title">算術個數</string>
+    <string name="operators_label">越多越難喔</string>
+    
+    <string name="plus_operator">+</string>
+    <string name="minus_operator">-</string>
+    <string name="equal_operator">=</string>
+    <string name="result">10</string>
+    
+    <string name="plus_btn_label">加</string>
+    <string name="minus_btn_label">減</string>
+    <string name="clear_btn_label">清除</string>
+    <string name="again_btn_label">再玩一次</string>
+    
+    <string name="plus_minus_title">Plus Minus</string>
+    
+    <string name="game_over">時間到!</string>
+    <string name="clear">答對了!</string>
+    
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListPreference android:defaultValue="10"
+    	android:summary="@string/times_label" 
+    	android:key="times" 
+    	android:title="@string/times_title"
+    	android:persistent="true"
+    	android:entries="@array/times_entry_text"
+        android:entryValues="@array/times_entry_value"
+    	/>
+    <ListPreference android:defaultValue="2"
+    	android:summary="@string/operators_label" 
+    	android:key="operators" 
+    	android:title="@string/operators_title"
+    	android:persistent="true"
+    	android:entries="@array/operators_entry_text"
+        android:entryValues="@array/operators_entry_value"
+    	/>
+</PreferenceScreen>

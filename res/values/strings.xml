@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Plus Minus</string>
+    <string name="start_btn_label">Start Game</string>
+    <string name="setting_btn_label">Setting</string>
+    <string name="settings_title">Setting</string>
+    
+    <string name="times_title">Times</string>
+    <string name="times_label">How many seconds you have</string>
+    
+    <string name="operators_title">Operators</string>
+    <string name="operators_label">How many operators need calculate</string>
+    
+    <string name="plus_operator">+</string>
+    <string name="minus_operator">-</string>
+    <string name="equal_operator">=</string>
+    <string name="result">10</string>
+    
+    <string name="plus_btn_label">+</string>
+    <string name="minus_btn_label">-</string>
+    <string name="clear_btn_label">Clear</string>
+    <string name="again_btn_label">Play again</string>
+    
+    <string name="plus_minus_title">Plus Minus</string>
+    
+    <string name="game_over">Times up!</string>
+    <string name="clear">Correct!</string>
+    
+</resources>
