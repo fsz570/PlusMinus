@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background">#AA0080FF</color>
+    <color name="main_background">#5CACEE</color>
+    <color name="btn_background">#FF9D37</color>
+    <color name="background">#5CACEE</color>
+    <color name="count_down_5_color">#FFD700</color>
+    <color name="how_to_step_0">#FFD700</color>
+    <color name="how_to_step_others">#0000FF</color>
 </resources>

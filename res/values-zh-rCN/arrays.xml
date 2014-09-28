@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array name="times_entry_text">
+    	<item>5 秒</item>
+    	<item>10 秒</item>
+    	<item>15 秒</item>
+    	<item>20 秒</item>
+    	<item>25 秒</item>
+    	<item>30 秒</item>
+    </string-array>
+ 
+    <string-array name="times_entry_value">
+    	<item>5</item>
+    	<item>10</item>
+    	<item>15</item>
+    	<item>20</item>
+    	<item>25</item>
+    	<item>30</item>
+    </string-array>
+    
+	<string-array name="operators_entry_text">
+    	<item>2 个</item>
+    	<item>3 个</item>
+    	<item>4 个</item>
+    </string-array>
+ 
+    <string-array name="operators_entry_value">
+    	<item>2</item>
+    	<item>3</item>
+    	<item>4</item>
+    </string-array>
+</resources>

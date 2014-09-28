@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">加加減減</string>
+    <string name="start_btn_label">ゲーム開始</string>
+    <string name="setting_btn_label">オプション</string>
+    <string name="settings_title">オプション</string>
+    
+    <string name="times_title">秒数</string>
+    <string name="times_label">カウントダウンが終わる前に答えましょう</string>
+    
+    <string name="operators_title">数字の数量</string>
+    <string name="operators_label">より難しい~~~</string>
+    
+    <string name="endless_title">レベル無制限</string>
+    <string name="endless_label">ずっとあそびま しょう</string>
+    
+    <string name="how_to_play_title">ゲームプレー</string>
+    <string name="how_to_play_label">ゲームプレイする方法私を見る</string>
+    
+    <string name="plus_operator">+</string>
+    <string name="minus_operator">-</string>
+    <string name="equal_operator">=</string>
+    <string name="result">10</string>
+    
+    <string name="plus_btn_label">加算</string>
+    <string name="minus_btn_label">減算</string>
+    <string name="clear_btn_label">クリア</string>
+    <string name="again_btn_label">再生</string>
+    
+    <string name="plus_minus_title">加加減減</string>
+    
+    <string name="game_over">制限時間終了!</string>
+    <string name="clear">正解!</string>
+    <string name="score">　</string>
+    <string name="rotate">回転!!!</string>
+    
+    <string name="howto_btn_label">ゲーム開始</string>
+    <string name="how_to_play_step_0">ゲームプレー</string>
+    <string name="how_to_play_step_1">タッププラスマイナスボタン.</string>
+    <string name="how_to_play_step_2">この式を完成するために.</string>
+    <string name="how_to_play_step_3">時間に終わる前.</string>
+    
+</resources>

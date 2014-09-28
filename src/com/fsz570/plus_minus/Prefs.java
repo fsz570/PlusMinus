@@ -5,10 +5,12 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
+
 public class Prefs extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//此設定 preference 得重寫
 		addPreferencesFromResource(R.xml.settings);
 	}
 
@@ -21,4 +23,16 @@ public class Prefs extends PreferenceActivity {
 		return PreferenceManager.getDefaultSharedPreferences(context)
 				.getString("operators", "2");
 	}
+	
+	public static boolean getEndless(Context context) {
+		return PreferenceManager.getDefaultSharedPreferences(context)
+				.getBoolean("endless", false);
+	}
+	
+	public static boolean getHowToPlay(Context context) {
+		return PreferenceManager.getDefaultSharedPreferences(context)
+				.getBoolean("howToPlay", false);
+	}
+	
+
 }

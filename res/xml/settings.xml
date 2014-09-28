@@ -17,4 +17,16 @@
     	android:entries="@array/operators_entry_text"
         android:entryValues="@array/operators_entry_value"
     	/>
+    
+    <CheckBoxPreference
+        android:key="endless"
+        android:title="@string/endless_title"
+        android:summary="@string/endless_label"
+        android:defaultValue="false" />
+    
+    <CheckBoxPreference
+        android:key="howToPlay"
+        android:title="@string/how_to_play_title"
+        android:summary="@string/how_to_play_label"
+        android:defaultValue="true" />
 </PreferenceScreen>

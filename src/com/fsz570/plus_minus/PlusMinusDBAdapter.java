@@ -1,5 +1,6 @@
 package com.fsz570.plus_minus;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,13 +24,13 @@ import android.util.Log;
 public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 	private static final String TAG = "PlusMinusDBAdapter";
 
-	private static String DB_PATH = "/data/data/com.fsz570.plus_minus/databases/";
+	//private String DB_PATH = "/data/data/com.fsz570.plus_minus/databases/";
 	private static final String DB_NAME = "plus_minus.db";
 	private static final String OP2_TABLE_NAME = "op2";
 	private static final String OP3_TABLE_NAME = "op3";
 	private static final String OP4_TABLE_NAME = "op4";
 	private static final String HIGH_SCORE_TABLE_NAME = "HIGH_SCORE";
-	private static final int DATABASE_VERSION = 1;
+	//private static final int DATABASE_VERSION = 1;
 
 	private static final String CREATE_OP2 = "create table op2 (_id integer primary key, "
 			+ "num1 integer not null, op1 integer not null, "
@@ -54,10 +55,13 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 
 	private final Context context;
 	private SQLiteDatabase theDataBase;
+	private String DB_PATH;
 
 	public PlusMinusDBAdapter(Context _context) {
 		super(_context, DB_NAME, null, 1);
 		context = _context;
+		File outFile = context.getDatabasePath(DB_NAME);
+		DB_PATH = outFile.getPath() ;
 	}
 
 	// Called when no database exists in
@@ -69,9 +73,21 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 
 		try {
 			// Try to copy predefined db
-			Log.d(TAG, "Create DB");
-			createDataBase();
+			Log.d(TAG, "PlusMinusDBAdapter.onCreate()");
+			boolean dbExist = checkDataBase();
+			
+			//如果 DB 不存在, 複製一份
+			if (!dbExist){
+				try {
+					Log.d(TAG, "DB not exist! copy from assets.");
+					copyDataBase();
+				} catch (IOException e) {
+					throw new Error("Error copying database");
+				}
+			}
+			
 		} catch (Exception e) {
+			Log.e(TAG, "PlusMinusDBAdapter.onCreate():" + e.getMessage());
 			Log.d(TAG, "Copy DB Fail, create new one.");
 			_db.execSQL(CREATE_OP2);
 			_db.execSQL(CREATE_OP3);
@@ -111,10 +127,10 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 
 	public void openDataBase() throws SQLException {
 		// Open the database
-		String myPath = DB_PATH + DB_NAME;
+		//String myPath = DB_PATH + DB_NAME;
+		String myPath = DB_PATH;
 		theDataBase = SQLiteDatabase.openDatabase(myPath, null,
 				SQLiteDatabase.OPEN_READWRITE);
-
 	}
 
 	@Override
@@ -131,16 +147,12 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 	public void createDataBase() throws IOException {
 
 		boolean dbExist = checkDataBase();
+		Log.d(TAG, "createDataBase()!");
 
 		if (dbExist) {
 			// do nothing - database already exist
 			this.getReadableDatabase();
-			Log.d(TAG, "DB Exist, try to copy another one!");
-			try {
-				copyDataBase();
-			} catch (IOException e) {
-				throw new Error("Error copying database");
-			}
+			Log.d(TAG, "DB Exist!");
 		} else {
 			// By calling this method and empty database will be created into
 			// the default system path
@@ -149,6 +161,7 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 			this.getReadableDatabase();
 
 			try {
+				Log.d(TAG, "DB not exist! copy from assets.");
 				copyDataBase();
 			} catch (IOException e) {
 				throw new Error("Error copying database");
@@ -165,18 +178,25 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 	private boolean checkDataBase() {
 
 		SQLiteDatabase checkDB = null;
+		
+		Log.d(TAG, "checkDataBase()!");
 
 		try {
-			String myPath = DB_PATH + DB_NAME;
-			checkDB = SQLiteDatabase.openDatabase(myPath, null,
+//			String myPath = DB_PATH + DB_NAME;
+//			Log.d(TAG, "DB_PATH = " + DB_PATH);
+//			Log.d(TAG, "myPath  = " + myPath);
+			checkDB = SQLiteDatabase.openDatabase(DB_PATH, null,
 					SQLiteDatabase.OPEN_READONLY);
 		} catch (SQLiteException e) {
 			// database does't exist yet.
+			Log.e(TAG, e.getMessage());
 		}
 
 		if (checkDB != null) {
 			Log.d(TAG, "DB Exists!");
 			checkDB.close();
+		}else{
+			Log.d(TAG, "DB not exists!");
 		}
 
 		return checkDB != null ? true : false;
@@ -189,26 +209,37 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 	 * */
 	private void copyDataBase() throws IOException {
 
+		Log.d(TAG, "copyDataBase()!");
+		InputStream myInput = null;
+		OutputStream myOutput = null;
+		
 		// Open your local db as the input stream
-		InputStream myInput = context.getAssets().open(DB_NAME);
+		try{
+			myInput = context.getAssets().open(DB_NAME);
+			// Path to the just created empty db
+			//String outFileName = DB_PATH + DB_NAME;
+			String outFileName = DB_PATH;
+			Log.d(TAG, "outFileName = " + outFileName);
+			// Open the empty db as the output stream
+			//Log.d(TAG, "External DIR : " + context.getExternalFilesDir(null).getAbsolutePath());
+			myOutput = new FileOutputStream(outFileName);
+			Log.d(TAG, "open output file!");
 
-		// Path to the just created empty db
-		String outFileName = DB_PATH + DB_NAME;
-
-		// Open the empty db as the output stream
-		OutputStream myOutput = new FileOutputStream(outFileName);
-
-		// transfer bytes from the inputfile to the outputfile
-		byte[] buffer = new byte[1024];
-		int length;
-		while ((length = myInput.read(buffer)) > 0) {
-			myOutput.write(buffer, 0, length);
+			// transfer bytes from the inputfile to the outputfile
+			byte[] buffer = new byte[1024];
+			int length;
+			while ((length = myInput.read(buffer)) > 0) {
+				myOutput.write(buffer, 0, length);
+				Log.d(TAG, "write output file!");
+			}
+		}catch(Exception e){
+			Log.e(TAG, e.getMessage());
+		}finally{
+			// Close the streams
+			myOutput.flush();
+			myOutput.close();
+			myInput.close();
 		}
-
-		// Close the streams
-		myOutput.flush();
-		myOutput.close();
-		myInput.close();
 
 	}
 
@@ -301,9 +332,10 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 				"_id", "num1", "op1", "num2", "op2", "num3" }, "_id=?",
 				new String[] { String.valueOf(id) }, null, null, null, null);
 
+		Log.d(TAG, "id : " + id);
+		
 		if (cur != null) {
 			cur.moveToFirst();
-			Log.d(TAG, "Count : " + cur.getCount());
 
 			vo = new VoOp2(cur.getInt(0), cur.getInt(1), cur.getInt(2),
 					cur.getInt(3), cur.getInt(4), cur.getInt(5));
@@ -322,6 +354,9 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 				"_id", "num1", "op1", "num2", "op2", "num3", "op3", "num4" },
 				"_id=?", new String[] { String.valueOf(id) }, null, null, null,
 				null);
+		
+		Log.d(TAG, "id : " + id);
+		
 		if (cur != null) {
 			cur.moveToFirst();
 
@@ -344,6 +379,9 @@ public class PlusMinusDBAdapter extends SQLiteOpenHelper {
 				"_id", "num1", "op1", "num2", "op2", "num3", "op3", "num4",
 				"op4", "num5" }, "_id=?", new String[] { String.valueOf(id) },
 				null, null, null, null);
+		
+		Log.d(TAG, "id : " + id);
+		
 		if (cur != null) {
 			cur.moveToFirst();
 

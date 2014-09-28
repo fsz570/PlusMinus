@@ -6,26 +6,45 @@ import com.fsz570.plus_minus.vo.VoOp2;
 import com.fsz570.plus_minus.vo.VoOp3;
 import com.fsz570.plus_minus.vo.VoOp4;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.media.AudioManager;
-import android.media.ToneGenerator;
+import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.os.CountDownTimer;
+import android.preference.PreferenceManager;
 
-public class PlusMinus extends Activity   implements OnClickListener{
+public class PlusMinus extends Activity   implements OnClickListener, SoundPool.OnLoadCompleteListener{
+	
+	private static final String TAG = "PlusMinus";
+	
+	private int TICKING_CLOCK_SOUND_ID = 0;		//滴答聲的 sound id, load 時取得
+	private int TICKING_CLOCK_STREAM_ID = 0;	//滴答聲的 stream id, play 時取得, stop 時會用到
 	
 	LinearLayout operationLayout = null;
 	TextView countDownText = null;
 	TextView scoreText = null;
+	SoundPool soundPool = null;
 	
 	int maxOperatorQty = 4;
 	int maxOperandQty = 5;
@@ -34,33 +53,118 @@ public class PlusMinus extends Activity   implements OnClickListener{
 	ImageView[] operandAry = new ImageView[maxOperandQty];
 	int[] operandValue = new int[maxOperandQty];
 	
+	ImageView equal = null;
+	
 	final int WC = ViewGroup.LayoutParams.WRAP_CONTENT;
 	
-	final int OPERATOR_TEXT_SIZE = 24;
-	final int OPERAND_TEXT_SIZE = 48;
-	final int OPERATOR_NONE = 0;
-	final int OPERATOR_PLUS = 1;
-	final int OPERATOR_MINUS = -1;
+	final LayoutParams OPERAND_LAYOUT_PARAM = new LinearLayout.LayoutParams(
+			LinearLayout.LayoutParams.MATCH_PARENT,	LinearLayout.LayoutParams.MATCH_PARENT,	1.0f);
+	
+	final LayoutParams OPERATOR_LAYOUT_PARAM = new LinearLayout.LayoutParams(
+			LinearLayout.LayoutParams.MATCH_PARENT,	LinearLayout.LayoutParams.MATCH_PARENT,	1.1f);
+	
+	final LayoutParams RESULT_LAYOUT_PARAM = new LinearLayout.LayoutParams(
+			LinearLayout.LayoutParams.MATCH_PARENT,	LinearLayout.LayoutParams.MATCH_PARENT,	1.0f);
+	
+	final int NUMBER_IMAGE_ARRAY[] = { R.drawable.number_0, R.drawable.number_1,
+			R.drawable.number_2, R.drawable.number_3, R.drawable.number_4,
+			R.drawable.number_5, R.drawable.number_6, R.drawable.number_7,
+			R.drawable.number_8, R.drawable.number_9 };
+	
+	final int NUMBER_IMAGE_ARRAY_A[] = { R.drawable.number_0, R.drawable.number_1,
+			R.drawable.number_2, R.drawable.number_3, R.drawable.number_4,
+			R.drawable.number_5, R.drawable.number_6, R.drawable.number_7,
+			R.drawable.number_8, R.drawable.number_9 };
+	
+	final int NUMBER_IMAGE_ARRAY_B[] = { R.drawable.number_0, R.drawable.number_1,
+			R.drawable.number_2, R.drawable.number_3, R.drawable.number_4,
+			R.drawable.number_5, R.drawable.number_6, R.drawable.number_7,
+			R.drawable.number_8, R.drawable.number_9 };
+	
+//	final int NUMBER_IMAGE_ARRAY_A[] = { R.drawable.number_a_0, R.drawable.number_a_1,
+//			R.drawable.number_a_2, R.drawable.number_a_3, R.drawable.number_a_4,
+//			R.drawable.number_a_5, R.drawable.number_a_6, R.drawable.number_a_7,
+//			R.drawable.number_a_8, R.drawable.number_a_9 };
+	
+//	
+//	final int NUMBER_IMAGE_ARRAY_B[] = { R.drawable.number_b_0, R.drawable.number_b_1,
+//			R.drawable.number_b_2, R.drawable.number_b_3, R.drawable.number_b_4,
+//			R.drawable.number_b_5, R.drawable.number_b_6, R.drawable.number_b_7,
+//			R.drawable.number_b_8, R.drawable.number_b_9 };
+	
+	Animation countDownAnim = null;
+	int remainTimes = -1;
+	
 	int operatorQty = 2;
+	boolean isEndless = false;
+	boolean isHowToPlay = false;
 
 	int maxOperandValue = 9;
 	int currentOperator = 0;
 	int totalScore = 0;
+	int completeCount = 0;
+	boolean isRightAnswer = false;
+	final int ROTATE_NUMBER_COUNT = 10;
 
 	boolean clear = false;
 	CountDownTimer countDown = null;
+	CountDownTimer rightAnswerCountDown = null;
+	
+	LinearLayout btnParentLayout = null;
 	ImageButton plsuBtn = null;
 	ImageButton minusBtn = null;
 	Button clearBtn = null;
 	Button againBtn = null;
 
-	ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 	PlusMinusDBAdapter dbAdapter = null;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
         setContentView(R.layout.plus_minus);
+
+        init();
+    }
+    
+    //TODO 要再加強暫停後繼續時, 重回原遊戲畫面的功能
+    protected void onResume(){
+    	super.onResume();
+    	
+    	if (soundPool != null){
+    		soundPool.autoResume();
+    	}else{
+    		initSoundPool();
+    	}
+    	Log.d(TAG, "onResume() : autoResume");
+    }
+    
+    //TODO 要再加強暫停後繼續時, 重回原遊戲畫面的功能
+    protected void onPause(){
+    	super.onPause();
+    	
+    	soundPool.autoPause();
+    	Log.d(TAG, "onPause() : autoPause");
+    }
+    
+    //Stop sound and release soundPol
+    protected void onStop(){
+    	super.onStop();
+    	
+    	if(soundPool != null){
+	    	soundPool.stop(TICKING_CLOCK_STREAM_ID);
+	    	soundPool.release();
+	    	soundPool = null;
+	    	Log.d(TAG, "onStop() : stop");
+    	}
+    	
+    	if(countDown != null){
+    		countDown.cancel();
+    	}
+    }
+    
+    private void init(){
+        initSoundPool();
         
     	String operators = Prefs.getOperators(this);
         
@@ -70,12 +174,18 @@ public class PlusMinus extends Activity   implements OnClickListener{
         	
         }
         
+        isEndless = Prefs.getEndless(this);
+        isHowToPlay = Prefs.getHowToPlay(this);
+        
         operationLayout = (LinearLayout)findViewById(R.id.operation_layer);
         
         scoreText = (TextView)findViewById(R.id.score_text);
         scoreText.setText(String.valueOf(totalScore));
         
         countDownText = (TextView)findViewById(R.id.count_down_text);
+        
+        
+        btnParentLayout = (LinearLayout)findViewById(R.id.operator_layer);
         
         plsuBtn = (ImageButton)findViewById(R.id.plus_btn);
         plsuBtn.setOnClickListener(this);
@@ -89,25 +199,12 @@ public class PlusMinus extends Activity   implements OnClickListener{
         againBtn = (Button)findViewById(R.id.again_btn);
         againBtn.setOnClickListener(this);
         
+        btnParentLayout.removeView(againBtn);
+        
+        countDownAnim = AnimationUtils.loadAnimation(PlusMinus.this, R.anim.count_down_anim);
+        
+        completeCount = 0;
         buildOperation();
-        
-        startGame();
-    }
-    
-    private void startGame(){
-    	currentOperator = 0;
-        countDown();
-        buildRandomOperation();
-        
-    	for(int i=0;i<operatorQty;i++){
-    		operatorAry[i].setImageResource(R.drawable.empty_background);
-    	}
-        
-		plsuBtn.setEnabled(true);
-		minusBtn.setEnabled(true);
-		clearBtn.setEnabled(true);
-        againBtn.setEnabled(false);
-        againBtn.setVisibility(View.INVISIBLE);
     }
     
     private void buildOperation(){
@@ -116,28 +213,100 @@ public class PlusMinus extends Activity   implements OnClickListener{
     		operandAry[i] = new ImageView(this);
     		operandAry[i].setScaleType(ImageView.ScaleType.FIT_CENTER);
     		operandAry[i].setImageResource(R.drawable.empty_background);
-    		operationLayout.addView(operandAry[i], new LinearLayout.LayoutParams(WC, WC));
+    		//operationLayout.addView(operandAry[i], new LinearLayout.LayoutParams(WC, WC));
+    		operationLayout.addView(operandAry[i], OPERAND_LAYOUT_PARAM);
     		
     		operatorAry[i] = new ImageView(this);
     		operatorAry[i].setScaleType(ImageView.ScaleType.FIT_CENTER);
-    		operatorAry[i].setImageResource(R.drawable.empty_background);
-    		operationLayout.addView(operatorAry[i], new LinearLayout.LayoutParams(WC, WC));
+    		operatorAry[i].setImageResource(R.drawable.empty_operator);
+    		//operationLayout.addView(operatorAry[i], new LinearLayout.LayoutParams(WC, WC));
+    		operationLayout.addView(operatorAry[i], OPERATOR_LAYOUT_PARAM);
     	}
     	
     	operandAry[operatorQty] = new ImageView(this); //Operand qty = operator qty + 1
     	operandAry[operatorQty].setScaleType(ImageView.ScaleType.FIT_CENTER);
     	operandAry[operatorQty].setImageResource(R.drawable.empty_background);
-    	operationLayout.addView(operandAry[operatorQty], new LinearLayout.LayoutParams(WC, WC));
+    	//operationLayout.addView(operandAry[operatorQty], new LinearLayout.LayoutParams(WC, WC));
+    	operationLayout.addView(operandAry[operatorQty], OPERAND_LAYOUT_PARAM);
         
-        TextView equal = new TextView(this);
-        equal.setText(R.string.equal_operator);
-        equal.setTextSize(OPERATOR_TEXT_SIZE);
-        operationLayout.addView(equal, new LinearLayout.LayoutParams(WC, WC));
+        equal = new ImageView(this);
+        equal.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        equal.setImageResource(R.drawable.equal);
+        //operationLayout.addView(result, new LinearLayout.LayoutParams(WC, WC));
+        operationLayout.addView(equal, OPERATOR_LAYOUT_PARAM);
         
         ImageView result = new ImageView(this);
         result.setScaleType(ImageView.ScaleType.FIT_CENTER);
         result.setImageResource(R.drawable.number_10);
-        operationLayout.addView(result, new LinearLayout.LayoutParams(WC, WC));
+        //operationLayout.addView(result, new LinearLayout.LayoutParams(WC, WC));
+        operationLayout.addView(result, RESULT_LAYOUT_PARAM);
+    }
+    
+    
+    private void startGame(){
+    	currentOperator = 0;
+        buildRandomOperation();
+        
+    	for(int i=0;i<operatorQty;i++){
+    		operatorAry[i].setImageResource(R.drawable.empty_operator);
+    	}
+    	equal.setImageResource(R.drawable.equal);
+        
+    	btnParentLayout.removeAllViews();
+    	btnParentLayout.addView(plsuBtn);
+    	btnParentLayout.addView(minusBtn);
+    	btnParentLayout.addView(clearBtn);
+    	
+    	plsuBtn.setEnabled(true);
+    	minusBtn.setEnabled(true);
+    	clearBtn.setEnabled(true);
+
+    	//如果是第一次開始, 取得預設秒數
+    	try{
+    		int initialTimes = Integer.parseInt(Prefs.getTimes(this));
+    		remainTimes = initialTimes;
+        }catch(Exception e){
+        	
+        }
+        
+		countDownText.setTextColor(Color.WHITE);
+    	countDownText.setTextSize(48);
+        countDownText.setText(""+remainTimes);
+        
+        countDownAnim = AnimationUtils.loadAnimation(PlusMinus.this, R.anim.count_down_anim);
+        
+		if (isHowToPlay) {
+			final Dialog dialog = new Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+			
+			dialog.setOnDismissListener(new OnDismissListener() {
+				public void onDismiss(DialogInterface arg0) {
+					playGame();
+				}
+			});
+
+			dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+			dialog.setContentView(R.layout.activity_how_to);
+			
+			Button myDialogButton = (Button)dialog.findViewById(R.id.howto_btn);
+			myDialogButton.setOnClickListener(new View.OnClickListener() {
+
+			    @Override
+			    public void onClick(View v) {
+			    	//playGame();
+			    	dialog.dismiss();
+			    }
+			});
+			dialog.show();
+
+			showHowToPlay(dialog);
+		}else{
+			playGame();
+		}
+    }
+    
+    private void playGame(){
+        countDown();
+        TICKING_CLOCK_STREAM_ID = soundPool.play(TICKING_CLOCK_SOUND_ID, 1.0f, 1.0f, 1, -1, Constants.INIT_TICKING_RATE);    	
     }
     
     private void buildRandomOperation(){
@@ -148,7 +317,14 @@ public class PlusMinus extends Activity   implements OnClickListener{
     	dbAdapter = new PlusMinusDBAdapter(this);
     	
     	if(operatorQty == 2){
-    		op2 = dbAdapter.fetchOp2(nextRandomOp2());
+    		op2 = dbAdapter.fetchOp2(nextRandomOp(operatorQty));
+    	}else if(operatorQty == 3){
+    		op3 = dbAdapter.fetchOp3(nextRandomOp(operatorQty));
+    	}else if(operatorQty == 4){
+    		op4 = dbAdapter.fetchOp4(nextRandomOp(operatorQty));
+    	}
+    	
+    	if(operatorQty == 2){
         	operandAry[0].setImageResource(getNumberImage(op2.getNum1()));
         	operandValue[0] = op2.getNum1();
         	
@@ -157,9 +333,9 @@ public class PlusMinus extends Activity   implements OnClickListener{
         	
         	operandAry[2].setImageResource(getNumberImage(op2.getNum3()));
         	operandValue[2] = op2.getNum3();
-    	}else if(operatorQty == 3){
-    		op3 = dbAdapter.fetchOp3(nextRandomOp3());
-    		
+        	
+        	Log.d(TAG, op2.toString());
+    	}else if(operatorQty == 3){   		
         	operandAry[0].setImageResource(getNumberImage(op3.getNum1()));
         	operandValue[0] = op3.getNum1();
         	
@@ -171,9 +347,9 @@ public class PlusMinus extends Activity   implements OnClickListener{
         	
         	operandAry[3].setImageResource(getNumberImage(op3.getNum4()));
         	operandValue[3] = op3.getNum4();
+        	
+        	Log.d(TAG, op3.toString());
     	}else if(operatorQty == 4){
-    		op4 = dbAdapter.fetchOp4(nextRandomOp4());
-    		
         	operandAry[0].setImageResource(getNumberImage(op4.getNum1()));
         	operandValue[0] = op4.getNum1();
         	
@@ -188,50 +364,41 @@ public class PlusMinus extends Activity   implements OnClickListener{
         	
         	operandAry[4].setImageResource(getNumberImage(op4.getNum5()));
         	operandValue[4] = op4.getNum5();
+        	
+        	Log.d(TAG, op4.toString());
     	}
 
     }
-    
-    private int nextRandomOp2(){
+
+    private int nextRandomOp(int op){
     	Random randomOperand = new Random(System.currentTimeMillis());
     	
-    	return randomOperand.nextInt(107)+1;
-    }
-    
-    private int nextRandomOp3(){
-    	Random randomOperand = new Random(System.currentTimeMillis());
-    	
-    	return randomOperand.nextInt(1802)+1;
-    }
-    
-    private int nextRandomOp4(){
-    	Random randomOperand = new Random(System.currentTimeMillis());
-    	
-    	return randomOperand.nextInt(28889)+1;
+    	return randomOperand.nextInt(Constants.OP_MAX[op])+1;
     }
     
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()){
 			case R.id.plus_btn :
-				operatorAry[currentOperator].setImageResource(R.drawable.plus_pressed);
-				operatorValue[currentOperator] = OPERATOR_PLUS;
+				operatorAry[currentOperator].setImageResource(R.drawable.plus_operator);
+				operatorValue[currentOperator] = Constants.OPERATOR_PLUS;
 				currentOperator++;				
 				break;
 			case R.id.minus_btn :
-				operatorAry[currentOperator].setImageResource(R.drawable.minus_pressed);
-				operatorValue[currentOperator] = OPERATOR_MINUS;
+				operatorAry[currentOperator].setImageResource(R.drawable.minus_operator);
+				operatorValue[currentOperator] = Constants.OPERATOR_MINUS;
 				currentOperator++;
 				break;
 				
 			case R.id.clear_btn :				
 				for(int i=0;i<operatorQty;i++){
-					operatorAry[i].setImageResource(R.drawable.empty_background);
-					operatorValue[i] = OPERATOR_NONE;
+					operatorAry[i].setImageResource(R.drawable.empty_operator);
+					operatorValue[i] = Constants.OPERATOR_NONE;
 				}
 				currentOperator = 0;
 				plsuBtn.setEnabled(true);
 				minusBtn.setEnabled(true);
+				equal.setImageResource(R.drawable.equal);
 				break;
 			case R.id.again_btn :	
 				currentOperator = 0;
@@ -241,28 +408,88 @@ public class PlusMinus extends Activity   implements OnClickListener{
 		
 		if(currentOperator >= operatorQty){
 			if(checkAnswer()){
-				int leftSeconds = Integer.parseInt((String)countDownText.getText());
-				int lastScore = Integer.parseInt((String)scoreText.getText());
-				
-				clear = true;
-				countDown.cancel();
-				countDownText.setTextColor(Color.WHITE);
-            	countDownText.setTextSize(48);
-            	countDownText.setText(R.string.clear);
-            	clearBtn.setEnabled(false);
-            	
-            	againBtn.setEnabled(true);
-                againBtn.setVisibility(View.VISIBLE);
-                
-                totalScore = calScore(leftSeconds, lastScore);
-                scoreText.setText(String.valueOf(totalScore));
+				rightAnswer();
 			}else{
 				clear = false;
+				equal.setImageResource(R.drawable.not_equal);
 			}
 			
 			plsuBtn.setEnabled(false);
 			minusBtn.setEnabled(false);
 		}
+	}
+	//TODO 答對時多一點效果
+	private void rightAnswer(){
+		int leftSeconds = Integer.parseInt((String)countDownText.getText());
+		int lastScore = Integer.parseInt((String)scoreText.getText());
+		
+		clear = true;
+		countDown.cancel();
+		
+		countDownText.setTextColor(Color.WHITE);
+    	countDownText.setTextSize(48);
+    	
+    	if(completeCount == ROTATE_NUMBER_COUNT){
+    		countDownText.setTextColor(Color.RED);
+    		countDownText.setText(R.string.rotate);
+    	}else{
+    		countDownText.setText(R.string.clear);
+    	}
+		Animation correctAnswerAnim = AnimationUtils.loadAnimation(PlusMinus.this, R.anim.correct_answer_anim);
+		countDownText.startAnimation(correctAnswerAnim);
+		//countDownText.clearAnimation();
+		
+		soundPool.stop(TICKING_CLOCK_STREAM_ID);
+		
+    	clearBtn.setEnabled(false);
+    	
+        completeCount++;
+        isRightAnswer = true;
+        
+        totalScore = calScore(leftSeconds, lastScore);
+        //不顯示分數，改為顯示次數
+        //scoreText.setText(String.valueOf(totalScore));
+        scoreText.setText(String.valueOf(completeCount));
+    	
+		for(int i=0;i<=operatorQty;i++){
+	    	operandAry[i].clearAnimation();
+		}
+		//如果是無限關卡, 繼續下一個遊戲
+		if(isEndless){
+			nextGame();
+		}else{
+               
+			btnParentLayout.removeAllViews();
+            btnParentLayout.addView(againBtn);
+            
+            remainTimes = 0;
+            
+    		for(int i=0;i<=operatorQty;i++){
+		    	operandAry[i].clearAnimation();
+    		}
+		}
+	}
+	
+	private void nextGame(){
+		
+
+			//停止一秒後繼續下一個
+			rightAnswerCountDown = new CountDownTimer(1000, 1000) {
+	
+	            public void onTick(long millisUntilFinished) {
+	            	//Do nothing
+	            }
+	
+	            public void onFinish() {
+	            	if (completeCount > ROTATE_NUMBER_COUNT){
+	            		for(int i=0;i<=operatorQty;i++){
+	        		    	operandAry[i].startAnimation(AnimationUtils.loadAnimation(PlusMinus.this, R.anim.number_rotate_anim));
+	            		}
+	            	}
+	            	startGame();
+	            }
+	         }.start();
+		
 	}
 	
 	private boolean checkAnswer(){
@@ -273,10 +500,10 @@ public class PlusMinus extends Activity   implements OnClickListener{
 		for(int i=0;i<operatorQty;i++){
 
 			switch(operatorValue[i]){
-				case OPERATOR_PLUS:
+				case Constants.OPERATOR_PLUS:
 					total+=operandValue[i+1];
 					break;
-				case OPERATOR_MINUS:
+				case Constants.OPERATOR_MINUS:
 					total-=operandValue[i+1];
 					break;
 			}
@@ -285,106 +512,139 @@ public class PlusMinus extends Activity   implements OnClickListener{
 		
 		return (total==10);
 	}
-	
+
     private void countDown(){
-    	   	
-    	int seconds = 10;
-    	
-        countDownText.setText(Prefs.getTimes(this));
-        
-        try{
-        	seconds = Integer.parseInt(Prefs.getTimes(this));
+
+    	//如果是第一次開始, 取得預設秒數
+    	try{
+    		int initialTimes = Integer.parseInt(Prefs.getTimes(this));
+    		remainTimes = initialTimes;
         }catch(Exception e){
         	
         }
         
-        countDown = new CountDownTimer(seconds*1000, 1000) {
+        countDown = new CountDownTimer(remainTimes*1000, 1000) {
 
             public void onTick(long millisUntilFinished) {
-            	long seconds = millisUntilFinished / 1000;
+            	int seconds = (int)millisUntilFinished / 1000;
             	
             	countDownText.setText(""+seconds);
             	
-            	
-            	if(seconds<=5){
-            		countDownText.setTextColor(Color.RED);
-            		playTone(ToneGenerator.TONE_PROP_PROMPT);
-            	}else{
-            		playTone(ToneGenerator.TONE_PROP_BEEP);
+            	if(seconds==5){
+            		//countDownText.setTextColor(R.color.count_down_5_color);
+            		countDownText.setTextColor(Color.parseColor("#FFD700"));
+            		
+            		countDownAnim = AnimationUtils.loadAnimation(PlusMinus.this, R.anim.count_down_5_anim);
             	}
+            	
+            	//改變聲音頻率
+            	if(seconds<=5){
+	        		if(soundPool != null ){
+	        			soundPool.setRate(TICKING_CLOCK_STREAM_ID, Constants.ERGY_TICKING_RATE[seconds]);
+	        		}
+            	}
+            	
+            	countDownText.startAnimation(countDownAnim);
+            	remainTimes = seconds;
             }
 
             public void onFinish() {
-            	clearBtn.setEnabled(false);
-            	plsuBtn.setEnabled(false);
-    			minusBtn.setEnabled(false);
+            	
+    			countDownText.clearAnimation();
             	countDownText.setTextColor(Color.WHITE);
             	countDownText.setTextSize(48);
             	countDownText.setText(R.string.game_over);
             	
-            	againBtn.setEnabled(true);
-                againBtn.setVisibility(View.VISIBLE);
-                dbAdapter.updateHighScore("David Wu",totalScore);
+            	Animation correctAnswerAnim = AnimationUtils.loadAnimation(PlusMinus.this, R.anim.correct_answer_anim);
+        		countDownText.startAnimation(correctAnswerAnim);
+            	
+            	soundPool.stop(TICKING_CLOCK_STREAM_ID);
+               
+    			btnParentLayout.removeAllViews();
+                btnParentLayout.addView(againBtn);
+                
+                remainTimes = 0;
+                
+                completeCount = 0;
+                isRightAnswer = false;
+        		for(int i=0;i<=operatorQty;i++){
+    		    	operandAry[i].clearAnimation();
+        		}
             }
          }.start();
     }
     
+    //計算成績的公式簡化
     private int calScore(int leftSeconds, int currentScore){
-    	int finalScore = 0;
     	
-    	int times = Integer.parseInt(Prefs.getTimes(this));
-    	int operators = Integer.parseInt(Prefs.getOperators(this)); 
-    	
-    	if(operators == 4){
-    		finalScore = leftSeconds * 3;
-    	}else if(operators == 3){
-    		if(times - leftSeconds > 9){
-    			finalScore = 1;
-    		}else{
-    			finalScore = leftSeconds * 2;
-    		}
-    	}else if(operators == 2){
-    		if(times - leftSeconds > 6){
-    			finalScore = 1;
-    		}else{
-    			finalScore = leftSeconds;
-    		}
-    	}
-    	
-    	return finalScore + currentScore;
+    	return leftSeconds + currentScore;
     }
     
+    //再來一次
     private void reload() {
-    	startGame();
-//        Intent intent = getIntent();
-//        finish();
-//        startActivity(intent);
-    }
-    
-    private void playTone(int tone){
-    	//toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP); do
-    	//toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK); da da
-    	//toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2); do do
-    	//toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK); count down
-    	//toneGenerator.startTone(ToneGenerator.TONE_PROP_PROMPT); count down
-    	toneGenerator.startTone(tone);
-    }
-    
-    private int getNumberImage(int num){
     	
-    	switch(num){
-	    	case 1 : return R.drawable.number_1;
-	    	case 2 : return R.drawable.number_2;
-	    	case 3 : return R.drawable.number_3;
-	    	case 4 : return R.drawable.number_4;
-	    	case 5 : return R.drawable.number_5;
-	    	case 6 : return R.drawable.number_6;
-	    	case 7 : return R.drawable.number_7;
-	    	case 8 : return R.drawable.number_8;
-	    	case 9 : return R.drawable.number_9;
+    	if(!isRightAnswer){
+    		scoreText.setText("0");
     	}
     	
-    	return R.drawable.number_0; //Should not happen
+    	startGame();
     }
+    
+    private int getNumberImage(int num){   	
+    	
+    	if(completeCount < 5){
+    		return NUMBER_IMAGE_ARRAY[num];
+    	}else if(completeCount < 10){
+    		return NUMBER_IMAGE_ARRAY_A[num];
+    	}else{
+    		return NUMBER_IMAGE_ARRAY_B[num];
+    	}
+    }
+    
+    //Initial sound pool, load sounds
+    private void initSoundPool(){
+		soundPool = new SoundPool(Constants.MAX_STREAM_SIZE,
+				AudioManager.STREAM_MUSIC, Constants.SRC_QUALITY);
+		
+		TICKING_CLOCK_SOUND_ID = soundPool.load(this,
+				R.raw.ticking_clock, Constants.SRC_PRIORITY);
+//		TICKING_CLOCK_SOUND_ID = soundPool.load(this,
+//				R.raw.clock, Constants.SRC_PRIORITY);
+		
+		soundPool.setOnLoadCompleteListener(this);
+    }
+    
+ // 在此設定 sound load 完成後再開始遊戲
+	public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+		startGame();
+	}
+    
+    private void showHowToPlay(Dialog dialog){
 
+    	RelativeLayout howToPlayLayout = (RelativeLayout) dialog.findViewById(R.id.how_to_play_layout); 
+    	
+    	Animation animation = (Animation)AnimationUtils.loadAnimation(this, R.anim.how_to_play_anim);
+        LayoutAnimationController lac = new LayoutAnimationController(animation);
+        lac.setOrder(LayoutAnimationController.ORDER_NORMAL);
+        lac.setDelay(1f);
+        howToPlayLayout.setLayoutAnimation(lac);
+    	
+    	stopHowToPlay();
+    }
+    
+    @TargetApi(9)
+	private void stopHowToPlay(){
+		isHowToPlay = false;		
+		
+		//The apply method only available after SDK level 9
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+			//saveHowToPlay();
+			PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean("howToPlay", isHowToPlay).apply();
+		}else{
+			Log.d(TAG, "SDK level < 9");
+			PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean("howToPlay", isHowToPlay).commit();
+		}
+	}
+   
+   
 }

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">加加减减</string>
+    <string name="start_btn_label">开始游戏</string>
+    <string name="setting_btn_label">设定</string>
+    <string name="settings_title">设定</string>
+    
+    <string name="times_title">秒数</string>
+    <string name="times_label">倒数结束前要算出来喔</string>
+    
+    <string name="operators_title">算术个数</string>
+    <string name="operators_label">越多越难~~~</string>
+    
+    <string name="endless_title">无限关卡</string>
+    <string name="endless_label">一直玩、一直玩、一直玩</string>
+    
+    <string name="how_to_play_title">游戏方式</string>
+    <string name="how_to_play_label">下次进入游戏时显示说明</string>
+    
+    <string name="plus_operator">+</string>
+    <string name="minus_operator">-</string>
+    <string name="equal_operator">=</string>
+    <string name="result">10</string>
+    
+    <string name="plus_btn_label">加</string>
+    <string name="minus_btn_label">减</string>
+    <string name="clear_btn_label">清　除</string>
+    <string name="again_btn_label">再玩一次</string>
+    
+    <string name="plus_minus_title">加加减减</string>
+    
+    <string name="game_over">时间到!</string>
+    <string name="clear">答对了!</string>
+    <string name="score">　</string>
+    <string name="rotate">转吧!!!</string>
+    
+	<string name="howto_btn_label">开始游戏</string>
+    <string name="how_to_play_step_0">游戏方式</string>
+    <string name="how_to_play_step_1">点选底下的加或减.</string>
+    <string name="how_to_play_step_2">使此运算式结果为.</string>
+    <string name="how_to_play_step_3">注意不要超过时间喔.</string>
+    
+</resources>

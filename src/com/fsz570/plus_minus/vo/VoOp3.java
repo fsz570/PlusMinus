@@ -91,5 +91,14 @@ public class VoOp3 {
 		this.num4 = num4;
 	}
 	
-	
+	public String toString(){
+		StringBuffer sb = new StringBuffer();
+		
+		sb.append(this.num1).append((this.op1 == 1) ? "+" : "-")
+				.append(this.num2).append((this.op2 == 1) ? "+" : "-")
+				.append(this.num3).append((this.op3 == 1) ? "+" : "-")
+				.append(this.num4);
+		
+		return sb.toString();
+	}
 }

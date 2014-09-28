@@ -1,29 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Plus Minus</string>
+
+    <string name="app_name">Plus or Minus</string>
     <string name="start_btn_label">Start Game</string>
     <string name="setting_btn_label">Setting</string>
-    <string name="settings_title">Setting</string>
     
+    <string name="settings_title">Setting</string>
     <string name="times_title">Times</string>
     <string name="times_label">How many seconds you have</string>
-    
     <string name="operators_title">Operators</string>
     <string name="operators_label">How many operators need calculate</string>
+    <string name="endless_title">Endless</string>
+    <string name="endless_label">There is no end</string>
     
+    <string name="how_to_play_title">How to Play</string>
+    <string name="how_to_play_label">Display how to play next time entering the game</string>
+    
+    <string name="initial_score">0</string>
     <string name="plus_operator">+</string>
     <string name="minus_operator">-</string>
     <string name="equal_operator">=</string>
     <string name="result">10</string>
-    
     <string name="plus_btn_label">+</string>
     <string name="minus_btn_label">-</string>
     <string name="clear_btn_label">Clear</string>
     <string name="again_btn_label">Play again</string>
-    
-    <string name="plus_minus_title">Plus Minus</string>
-    
+    <string name="plus_minus_title">Plus or Minus</string>
     <string name="game_over">Times up!</string>
     <string name="clear">Correct!</string>
+    <string name="score">　</string>
+    <string name="rotate">Rotate!!!</string>
+    <string name="title_activity_how_to">How To Play</string>
     
+    <string name="howto_btn_label">Tap to start!</string>
+    
+    <string name="how_to_play_step_0">How to play</string>
+    <string name="how_to_play_step_1">Tap Plus or Minus.</string>
+    <string name="how_to_play_step_2">To complete this expression.</string>
+    <string name="how_to_play_step_3">Before time\'s up.</string>
 </resources>

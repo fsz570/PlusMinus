@@ -5,11 +5,17 @@
     <string name="setting_btn_label">設定</string>
     <string name="settings_title">設定</string>
     
-    <string name="times_title">時間</string>
-    <string name="times_label">遊戲時間</string>
+    <string name="times_title">秒數</string>
+    <string name="times_label">倒數結束前要算出來喔</string>
     
     <string name="operators_title">算術個數</string>
-    <string name="operators_label">越多越難喔</string>
+    <string name="operators_label">越多越難~~~</string>
+    
+    <string name="endless_title">無限關卡</string>
+    <string name="endless_label">一直玩、一直玩、一直玩</string>
+    
+    <string name="how_to_play_title">遊戲方式</string>
+    <string name="how_to_play_label">下次進入遊戲時顯示說明</string>
     
     <string name="plus_operator">+</string>
     <string name="minus_operator">-</string>
@@ -18,12 +24,23 @@
     
     <string name="plus_btn_label">加</string>
     <string name="minus_btn_label">減</string>
-    <string name="clear_btn_label">清除</string>
+    <string name="clear_btn_label">清　除</string>
     <string name="again_btn_label">再玩一次</string>
     
-    <string name="plus_minus_title">Plus Minus</string>
+    <string name="plus_minus_title">加加減減</string>
     
     <string name="game_over">時間到!</string>
     <string name="clear">答對了!</string>
+    <string name="score">　</string>
+    <string name="rotate">轉吧!!!</string>
+    
+    <string name="title_activity_how_to">遊戲方式</string>
+    
+    <string name="howto_btn_label">開始遊戲</string>
+    
+    <string name="how_to_play_step_0">遊戲方式</string>
+    <string name="how_to_play_step_1">點選底下的加或減.</string>
+    <string name="how_to_play_step_2">使此運算式結果為10.</string>
+    <string name="how_to_play_step_3">注意不要超過時間喔.</string>
     
 </resources>
